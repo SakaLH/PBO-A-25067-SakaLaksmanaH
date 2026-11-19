@@ -2,14 +2,18 @@
 require __DIR__ . '/vendor/autoload.php';
 
 use Carbon\Carbon;
-use Perpustakaan\Service\LibraryService;
+use Perpustakaan\Denda\AturanDendaFactory;
 use Perpustakaan\Exception\PerpustakaanException;
+use Perpustakaan\Repository\InMemoryBookRepository;
+use Perpustakaan\Service\LibraryService;
 use Perpustakaan\Service\PerpustakaanService;
 
 /*
- * DEMO: hanya jalan kalau file ini dijalankan langsung (php LibraryService.php)
+ * DEMO: titik masuk program (manual Dependency Injection)
  */
-$s = new LibraryService();
+$repo = new InMemoryBookRepository();
+$aturanDenda = AturanDendaFactory::untuk('mahasiswa');
+$s = new LibraryService($repo, $aturanDenda);
 $s->tambahBuku('111', 'Laskar Pelangi','Andrea Hirarta', 1);
 $s->tambahBuku('222', 'Bumi Manusia','Pramoedya',  5);
 $s->daftarkanAnggota('A-001');

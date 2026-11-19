@@ -1,26 +1,25 @@
-# Praktikum Sesi 11 — Collections, Generics, dan Unit Test Pertama
+# Praktikum Sesi 12 — Refactoring dengan SOLID dan Repository Pattern
 
-**Sub-CPMK-P7 — Mahasiswa mampu menerapkan exception handling dan menulis unit test dasar dengan JUnit 5 dan PHPUnit. (P3)**
+**Sub-CPMK-P8 — Mahasiswa mampu merefaktor kode agar patuh pada prinsip SOLID dan menerapkan Repository pattern dengan dependency injection manual. (P4, C4)**
 
-**Keterkaitan teori:** Pertemuan 11 — Collections, Generics, dan Operasi Fungsional  
-**Durasi:** 170 menit (1 SKS praktikum) · **Bobot:** 5% dari nilai praktikum  
+**Keterkaitan teori:** Pertemuan 12 — Prinsip SOLID dan Design Pattern Dasar  
+**Durasi:** 170 menit (1 SKS praktikum) · **Bobot:** 6% dari nilai praktikum  
 **Bahasa:** Java 25 dan PHP 8.4+
 
-> Versi cetak modul ini: [`Modul-Praktikum-11-collections-generics-dan-unit-test-pertama.docx`](Modul-Praktikum-11-collections-generics-dan-unit-test-pertama.docx). Kerangka kode: [`starter/`](starter/).
+> Versi cetak modul ini: [`Modul-Praktikum-12-refactoring-dengan-solid-dan-repository-pattern.docx`](Modul-Praktikum-12-refactoring-dengan-solid-dan-repository-pattern.docx). Kerangka kode: [`starter/`](starter/).
 
 ---
 
 ## A. Tujuan sesi
 
-1. Mengganti struktur data manual dengan Collections Framework dan generics.
-2. Membuat kelas generik sendiri dan membaca tanda tangan bertipe parameter.
-3. Menulis unit test pertama dengan JUnit 5 dan PHPUnit.
-4. Menjadikan daftar skenario kegagalan sesi 10 sebagai kasus uji yang benar-benar dijalankan.
+1. Menemukan pelanggaran SOLID pada kode sendiri, bukan pada contoh buatan.
+2. Memisahkan tanggung jawab penyimpanan dari aturan bisnis dengan Repository pattern.
+3. Menyuntikkan dependensi lewat constructor secara manual, tanpa framework.
+4. Membuktikan bahwa aturan bisnis kini dapat diuji tanpa penyimpanan sesungguhnya.
 
 ## B. Alat dan bahan
 
-- Proyek hasil sesi 9 dan 10.
-- JUnit 5 (lewat Maven) dan PHPUnit (lewat Composer).
+- Proyek hasil sesi 9–11, termasuk unit test yang sudah berjalan.
 
 ## C. Berkas starter
 
@@ -28,100 +27,82 @@ Salin ke folder tugas Anda; **jangan** menyunting berkas aslinya. Setiap komenta
 
 | Berkas | Keterangan |
 |---|---|
-| `starter/java/Repository.java` | Kerangka kelas generik Repository<T> dengan TODO. |
-| `starter/java/RepositoryTest.java` | Kerangka uji JUnit 5 dengan TODO pada assertion. |
-| `starter/php/KoleksiBuku.php` | Kerangka typed collection dengan TODO. |
-| `starter/php/KoleksiBukuTest.php` | Kerangka uji PHPUnit dengan TODO. |
-| `starter/pom-tambahan.xml` | Potongan dependensi JUnit 5 dan plugin surefire yang harus disalin ke pom.xml Anda. |
+| `starter/java/BookRepository.java` | Interface kontrak dengan TODO. |
+| `starter/java/InMemoryBookRepository.java` | Implementasi untuk pengujian, dengan TODO. |
+| `starter/java/AturanDenda.java` | Interface Strategy dengan TODO. |
+| `starter/php/repository.php` | Padanan PHP dengan TODO. |
+| `starter/REFACTORING-template.md` | Template tabel sebelum–sesudah yang harus Anda isi. |
 
 ## D. Langkah kerja
 
 Kerjakan berurutan. Jangan melanjutkan ke langkah berikutnya sebelum checkpoint terpenuhi.
 
-### Langkah 1 — Mengganti struktur data manual dengan Collections
+### Langkah 1 — Audit SOLID atas kode sendiri
 
-- Buka LibraryService hasil sesi 10. Kemungkinan besar Anda masih memakai array biasa atau beberapa array paralel.
-- Ganti dengan struktur yang tepat: List untuk daftar berurutan, Map untuk pencarian berdasarkan kunci, Set bila tidak boleh ada duplikat.
-- Tuliskan di sesi-11/pilihan-koleksi.md: untuk setiap penggantian, mengapa Anda memilih struktur itu dan bukan yang lain.
+- Buka LibraryService Anda dari sesi 10–11. Bacalah seperti orang lain yang baru melihatnya.
+- Isi bagian pertama REFACTORING.md: temukan MINIMAL TIGA pelanggaran SOLID. Untuk setiap temuan tuliskan: prinsip yang dilanggar, berkas dan baris, mengapa itu pelanggaran, dan akibatnya bila dibiarkan.
+- Petunjuk tempat mencari: kelas yang menyimpan data sekaligus mengatur aturan bisnis sekaligus mencetak keluaran (SRP); rantai if untuk jenis anggota (OCP); pembuatan objek penyimpanan langsung di dalam layanan (DIP).
 
-> **Checkpoint —** Tidak ada lagi array paralel. Pencarian buku berdasarkan ISBN tidak lagi memakai perulangan linear.
+> **Checkpoint —** REFACTORING.md memuat tiga temuan dengan rujukan berkas dan baris yang nyata.
 
-### Langkah 2 — Membuat kelas generik Repository<T>
+### Langkah 2 — Menerapkan Repository pattern
 
-- Lengkapi TODO pada Repository.java: simpan(T), cariById(String) yang mengembalikan Optional<T>, cariSemua() yang mengembalikan List<T>, dan hapus(String).
-- Perhatikan tanda tangannya. Setelah sesi ini, JpaRepository<Buku, Long> pada sesi 14 tidak akan terasa asing.
-- Getter cariSemua() harus mengembalikan salinan tak-berubah — pelajaran dari sesi 7 tetap berlaku.
+- Lengkapi interface BookRepository: cariByIsbn, cariSemua, simpan, kurangiStok.
+- Buat InMemoryBookRepository sebagai implementasinya.
+- Ubah LibraryService agar TIDAK LAGI membuat sendiri penyimpanannya. Ia menerima BookRepository lewat constructor.
+- Pastikan LibraryService tidak lagi menyebut satu pun kelas konkret penyimpanan.
 
-> **Checkpoint —** Repository<Buku> menolak penyimpanan objek selain Buku pada tahap KOMPILASI.
+> **Checkpoint —** Kata "new" tidak muncul lagi di dalam LibraryService untuk urusan penyimpanan.
 
-### Langkah 3 — Optional dan padanannya di PHP
+### Langkah 3 — Menerapkan Strategy untuk aturan denda
 
-- Ganti seluruh method pencarian yang mengembalikan null menjadi Optional<T> di Java.
-- Di PHP, gunakan tipe nullable (?Buku) dengan operator null-safe (?->) dan null-coalescing (??).
-- Cari di kode Anda: adakah baris yang masih berpotensi menimbulkan NullPointerException? Catat di pilihan-koleksi.md.
+- Rantai if untuk jenis anggota (mahasiswa, dosen, kehormatan) diganti dengan interface AturanDenda dan tiga implementasinya.
+- Tambahkan AturanDendaFactory yang memilih implementasi berdasarkan jenis anggota.
+- Buktikan Open-Closed: tambahkan jenis keempat (misalnya alumni) TANPA menyunting satu baris pun pada LibraryService.
 
-> **Checkpoint —** Tidak ada method pencarian yang mengembalikan null secara langsung.
+> **Checkpoint —** Menambah aturan denda keempat hanya menambah satu berkas dan satu baris di factory.
 
-### Langkah 4 — Operasi fungsional atas koleksi
+### Langkah 4 — Dependency injection manual
 
-- Tulis tiga laporan menggunakan operasi fungsional, tanpa perulangan manual:
-  1. Daftar buku yang tersedia (filter).
-  2. Daftar judul saja, digabung dengan pemisah (map + join).
-  3. Jumlah buku per penulis (groupingBy di Java; pengelompokan manual atau Collection di PHP).
-- PERHATIAN PHP: array_map(callable, array) tetapi array_filter(array, callable) — urutan argumennya berbeda. Ini sumber kesalahan yang sangat sering.
+- Di App (titik masuk program), rakit seluruh objek: buat repository, buat aturan denda, lalu suntikkan keduanya ke LibraryService.
+- Perhatikan bahwa App kini menjadi SATU-SATUNYA tempat kelas konkret disebut.
+- Catat di REFACTORING.md: berapa kelas yang perlu diubah bila penyimpanan diganti dari memori ke basis data? (Jawaban yang benar: satu berkas baru, satu baris di App.)
 
-> **Checkpoint —** Ketiga laporan berjalan dan hasilnya sama antara versi Java dan PHP.
+> **Checkpoint —** Seluruh perakitan objek terjadi di App, dan tidak ada kelas lain yang membuat dependensinya sendiri.
 
-### Langkah 5 — Unit test pertama dengan JUnit 5
+### Langkah 5 — Membuktikan manfaatnya lewat pengujian
 
-- Salin potongan dependensi dari pom-tambahan.xml ke pom.xml Anda.
-- Buat src/test/java/ dengan struktur package yang sama seperti src/main/java.
-- Lengkapi RepositoryTest.java. Minimal lima kasus uji: menyimpan lalu menemukan, mencari yang tidak ada, menghapus, koleksi kosong, dan penyimpanan dengan kunci yang sama (menimpa atau menolak — sesuai rancangan Anda).
-- Tambahkan pula uji untuk exception: pastikan pinjam() melempar BukuTidakDitemukanException untuk ISBN yang tidak terdaftar.
+- Perbarui unit test dari sesi 11: kini LibraryService dapat diuji dengan InMemoryBookRepository, tanpa penyimpanan sesungguhnya.
+- Buat satu implementasi repository palsu tambahan yang SELALU melempar exception, lalu buktikan bahwa LibraryService menanganinya dengan benar.
+- Inilah bukti nyata Dependency Inversion: aturan bisnis dapat diuji terpisah dari penyimpanannya.
 
 **Terminal**
 
 ```bash
 mvn test
-```
-
-> **Checkpoint —** mvn test menampilkan Tests run: minimal 8, Failures: 0, Errors: 0.
-
-### Langkah 6 — Unit test dengan PHPUnit
-
-- Tambahkan PHPUnit sebagai dependensi pengembangan, dan tambahkan pemetaan autoload-dev untuk namespace pengujian.
-- Lengkapi KoleksiBukuTest.php dengan kasus uji yang setara.
-- Terjemahkan minimal LIMA skenario dari skenario-uji.md sesi 10 menjadi kasus uji yang benar-benar dijalankan.
-
-**Terminal**
-
-```bash
-composer require --dev phpunit/phpunit
 ./vendor/bin/phpunit tests
 ```
 
-> **Checkpoint —** PHPUnit menampilkan OK dengan minimal 8 pengujian dan nol kegagalan.
+> **Checkpoint —** Seluruh uji lulus, dan minimal satu uji memakai repository palsu.
 
-### Langkah 7 — Membuat satu uji gagal dengan sengaja
+### Langkah 6 — Menuliskan yang sengaja TIDAK direfaktor
 
-- Ubah satu baris kode sumber sehingga salah satu uji gagal. Jalankan pengujian.
-- Salin pesan kegagalannya ke sesi-11/pilihan-koleksi.md dan jelaskan bagaimana pesan itu membantu menemukan letak masalah.
-- Kembalikan kodenya, pastikan seluruh uji hijau kembali.
+- Bagian terakhir REFACTORING.md: sebutkan SATU tempat di kode Anda yang sengaja TIDAK Anda beri pattern, beserta alasannya.
+- Bagian ini dinilai sama beratnya dengan bagian refactoring. Kemampuan menahan diri dari over-engineering sama pentingnya dengan kemampuan menerapkan pattern.
 
-> **Checkpoint —** pilihan-koleksi.md memuat satu pesan kegagalan uji beserta penjelasannya.
+> **Checkpoint —** REFACTORING.md memuat satu keputusan untuk TIDAK memakai pattern, dengan alasan yang berpijak pada kebutuhan nyata.
 
 ## E. Latihan mandiri di lab
 
 _Dikerjakan bila langkah kerja selesai lebih awal. Tidak wajib, tetapi menambah nilai pada aspek penerapan konsep._
 
-1. Ganti HashMap menjadi TreeMap pada salah satu struktur Anda. Jalankan laporan. Jelaskan perubahan urutan keluarannya.
-2. Tulis method generik dengan bounded type: <N extends Number> double jumlahkan(List<N> angka). Coba panggil dengan List<String> dan catat pesan kompilatornya.
-3. Di PHP, jalankan array_filter tanpa array_values lalu json_encode hasilnya. Amati bahwa keluarannya menjadi objek, bukan larik. Jelaskan mengapa.
+1. Terapkan Singleton pada salah satu kelas Anda, lalu coba tulis unit test untuknya. Rasakan kesulitannya. Kembalikan menjadi objek biasa yang di-inject, dan bandingkan.
+2. Cari satu interface di kode Anda yang punya lebih dari lima method. Pecah menjadi dua interface yang lebih kecil sesuai Interface Segregation.
 
 ## F. Tugas rumah
 
-1. Perluas cakupan pengujian sampai seluruh 10 skenario dari sesi 10 terwakili.
-2. Tulis sesi-11/catatan-uji.md: menurut Anda, kasus uji apa yang PALING sulit ditulis, dan mengapa?
+1. TUGAS 4 (mata kuliah teori) dikerjakan bersama sesi ini: analisis dan refactoring SOLID lengkap dengan REFACTORING.md.
+2. Persiapan sesi 13: pasang Laravel 13 di perangkat Anda. Jalankan composer create-project laravel/laravel:^13.0 latihan-laravel dan pastikan php artisan serve berhasil. Selesaikan SEBELUM sesi 13 — waktu lab tidak akan cukup untuk pemasangan.
 
 ## G. Luaran yang dikumpulkan
 
@@ -129,11 +110,11 @@ Seluruh luaran diserahkan melalui repositori Git pribadi Anda, dengan riwayat co
 
 | Berkas / folder | Keterangan |
 |---|---|
-| `src/main/.../Repository.java` | Kelas generik dengan Optional. |
-| `src/test/java/` | Kelas uji JUnit 5 yang seluruhnya lulus. |
-| `tests/` | Kelas uji PHPUnit yang seluruhnya lulus. |
-| `sesi-11/pilihan-koleksi.md` | Alasan pemilihan struktur koleksi, catatan null-safety, dan satu pesan kegagalan uji. |
-| `sesi-11/catatan-uji.md` | Refleksi tentang kasus uji tersulit. |
+| `BookRepository dan implementasinya` | Di kedua proyek. |
+| `AturanDenda dan tiga implementasi + factory` | Di kedua proyek. |
+| `LibraryService` | Versi yang menerima dependensi lewat constructor. |
+| `REFACTORING.md` | Tiga temuan SOLID, tabel sebelum–sesudah, dan satu keputusan untuk tidak memakai pattern. |
+| `Unit test yang diperbarui` | Termasuk satu uji dengan repository palsu. |
 
 ## H. Rubrik penilaian sesi ini
 
@@ -148,23 +129,23 @@ Seluruh luaran diserahkan melalui repositori Git pribadi Anda, dengan riwayat co
 
 > Pertanyaan berikut akan diajukan saat Anda mendemokan pekerjaan sesi ini. Daftar ini sengaja dibuka agar Anda mempersiapkan **pemahaman**, bukan hafalan. Anda boleh memakai alat bantu apa pun saat mengerjakan — tetapi kode yang tidak dapat Anda jelaskan sendiri tidak dinilai.
 
-1. Mengapa Anda memilih Map dan bukan List untuk menyimpan buku? Apa yang berubah dari sisi kecepatan pencarian?
-2. Bacakan tanda tangan Repository<T> Anda. Apa arti T di situ? Apa yang terjadi kalau saya mencoba menyimpan objek Anggota ke Repository<Buku>?
-3. Mengapa cariById mengembalikan Optional dan bukan null? Tunjukkan satu tempat di kode Anda yang menjadi lebih aman karenanya.
-4. Jalankan mvn test sekarang. Berapa uji yang berjalan? Tunjuk satu uji dan jelaskan apa yang sedang dibuktikannya.
-5. Saya ubah satu baris di LibraryService sekarang — uji mana yang akan gagal? Mari kita buktikan.
-6. Tunjukkan satu skenario dari daftar sesi 10 yang sudah Anda ubah menjadi unit test. Bagaimana bentuknya berubah?
-7. Pada kode PHP Anda, apa beda array_map dan array_filter dari sisi urutan argumen? Mengapa itu sering menimbulkan kesalahan?
+1. Sebutkan satu pelanggaran SOLID yang Anda temukan di kode Anda sendiri. Tunjuk barisnya, lalu tunjuk versi perbaikannya.
+2. Di LibraryService Anda, di mana objek penyimpanan dibuat? Kalau jawabannya "tidak di sini", lalu di mana?
+3. Saya ingin mengganti penyimpanan dari memori ke basis data. Berkas apa saja yang harus saya ubah? Jangan dikerjakan — cukup sebutkan.
+4. Tambahkan aturan denda untuk alumni sekarang. Berapa berkas lama yang isinya berubah?
+5. Tunjukkan uji yang memakai repository palsu. Mengapa uji itu tidak mungkin ditulis sebelum refactoring?
+6. Bagian mana dari kode Anda yang sengaja TIDAK diberi pattern? Mengapa?
+7. Kalau saya memaksa Anda menambahkan Factory untuk membuat objek Buku, apa untung dan ruginya?
 
 ## J. Kesalahan yang sering terjadi
 
 | Gejala | Penyebab yang lazim | Cara memperbaiki |
 |---|---|---|
-| mvn test tidak menemukan satu pun uji | Berkas uji tidak berada di src/test/java, atau namanya tidak berakhiran Test. | Ikuti konvensi Maven: src/test/java dan nama kelas berakhiran Test. |
-| PHPUnit: No tests executed | Namespace pengujian belum terdaftar di autoload-dev, atau folder tests salah. | Tambahkan autoload-dev pada composer.json lalu jalankan composer dump-autoload. |
-| ConcurrentModificationException | Koleksi diubah saat sedang di-iterasi. | Gunakan Iterator.remove(), removeIf(), atau kumpulkan dulu ke koleksi baru. |
-| json_encode menghasilkan objek, bukan larik | array_filter meninggalkan indeks berlubang. | Bungkus dengan array_values() setelah array_filter. |
-| Uji lulus padahal kode salah | Assertion terlalu longgar, mis. hanya memeriksa bahwa hasilnya tidak null. | Periksa nilai yang sesungguhnya diharapkan. Uji yang tidak pernah bisa gagal tidak membuktikan apa pun. |
+| LibraryService masih memanggil new untuk penyimpanan | Refactoring berhenti di pembuatan interface saja. | Pindahkan pembuatan objek ke App dan terima lewat constructor. |
+| Interface dibuat tetapi hanya punya satu implementasi selamanya | Abstraksi spekulatif. | Interface dibenarkan di sini karena dipakai untuk pengujian dengan implementasi palsu — pastikan implementasi kedua itu benar-benar ada. |
+| Factory berisi rantai if yang persis sama dengan sebelumnya | Rantai if hanya dipindahkan, bukan dihilangkan. | Itu masih dapat diterima: rantai kini terpusat di SATU tempat, bukan tersebar. Yang penting LibraryService bersih. |
+| Unit test rusak setelah refactoring | Constructor berubah tetapi uji belum disesuaikan. | Perbarui uji — itu memang bagian dari pekerjaan refactoring, bukan gangguan. |
+| REFACTORING.md hanya berisi daftar perubahan tanpa alasan | Menganggap dokumen sebagai formalitas. | Alasan adalah isi utamanya. Tanpa alasan, dokumen tidak dinilai. |
 
 ## Lembar verifikasi demo
 

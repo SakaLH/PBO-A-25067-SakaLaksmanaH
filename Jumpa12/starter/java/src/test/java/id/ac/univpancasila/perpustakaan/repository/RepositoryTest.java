@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Optional;
 import id.ac.univpancasila.perpustakaan.service.LibraryService;
+import id.ac.univpancasila.perpustakaan.denda.DendaMahasiswa;
 import id.ac.univpancasila.perpustakaan.exception.BukuTidakDitemukanException;
 import id.ac.univpancasila.perpustakaan.exception.AnggotaTidakDitemukanException;
 
@@ -117,7 +118,7 @@ class RepositoryTest {
     @Test
     @DisplayName("Exception: Meminjam dengan ISBN yang tidak terdaftar melempar BukuTidakDitemukanException")
     void exceptionPinjamBukuTidakAda() {
-        LibraryService service = new LibraryService();
+        LibraryService service = new LibraryService(new InMemoryBookRepository(), new DendaMahasiswa());
         service.daftarkanAnggota("ANG-001");
         
         // Memastikan method pinjam() melempar exception saat ISBN salah
@@ -129,7 +130,7 @@ class RepositoryTest {
     @Test
     @DisplayName("Exception: Meminjam dengan ID Anggota yang tidak terdaftar melempar AnggotaTidakDitemukanException")
     void exceptionPinjamAnggotaTidakAda() {
-        LibraryService service = new LibraryService();
+        LibraryService service = new LibraryService(new InMemoryBookRepository(), new DendaMahasiswa());
         
         assertThrows(AnggotaTidakDitemukanException.class, () -> {
             service.pinjam("ANG-NGASAL", "978-1");

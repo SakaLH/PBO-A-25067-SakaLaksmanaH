@@ -1,37 +1,41 @@
 <?php
+declare(strict_types=1);
+
 namespace Perpustakaan\Service;
 
+use Perpustakaan\Denda\AturanDenda;
 use Perpustakaan\Exception\AnggotaTidakDitemukanException;
-use Perpustakaan\Exception\BukuTidakDitemukanException;
-use Perpustakaan\Exception\BukuSedangDipinjamException;
 use Perpustakaan\Exception\BatasPinjamTerlampauiException;
+use Perpustakaan\Exception\BukuSedangDipinjamException;
+use Perpustakaan\Exception\BukuTidakDitemukanException;
 use Perpustakaan\Model\Buku;
-use Perpustakaan\Repository\KoleksiBuku;
+use Perpustakaan\Repository\BookRepository;
 
 final class LibraryService
 {
-    public const int BATAS_PINJAM  = 3;
+    public const int BATAS_PINJAM = 3;
 
-    private KoleksiBuku $koleksiBuku;
     /** @var array<string,int> */
     private array $pinjaman = [];
 
-    public function __construct()
-    {
-        $this->koleksiBuku = new KoleksiBuku();
-    }
+    // TODO 5: terima BookRepository dan AturanDenda lewat constructor (tanpa new di dalam service)
+    public function __construct(
+        private readonly BookRepository $repo,
+        private readonly AturanDenda $aturanDenda,
+    ) {}
 
+    // TODO 6: pindahkan method aturan bisnis ke sini dan gunakan $this->repo
     public function tambahBuku(string $isbn, string $judulBuku, string $penulis, int $eksemplar): void
     {
-        $buku = $this->koleksiBuku->cariByIsbn($isbn);
+        $buku = $this->repo->cariByIsbn($isbn);
 
-        if($buku !== null){
-            for($i = 0; $i < $eksemplar; $i++){
+        if ($buku !== null) {
+            for ($i = 0; $i < $eksemplar; $i++) {
                 $buku->tambahStok();
             }
         } else {
             $bukuBaru = new Buku($isbn, $judulBuku, $penulis, $eksemplar);
-            $this->koleksiBuku->simpan($bukuBaru);
+            $this->repo->simpan($bukuBaru);
         }
     }
 
@@ -40,20 +44,13 @@ final class LibraryService
         $this->pinjaman[$idAnggota] ??= 0;
     }
 
-    /**
-     * @throws AnggotaTidakDitemukanException jika anggota belum terdaftar
-     * @throws BukuTidakDitemukanException    jika ISBN tidak ada di katalog
-     * @throws BukuSedangDipinjamException    jika tidak ada eksemplar tersisa
-     * @throws BatasPinjamTerlampauiException jika anggota sudah mencapai batas
-     */
     public function pinjam(string $idAnggota, string $isbn): void
     {
         if (!array_key_exists($idAnggota, $this->pinjaman)) {
             throw new AnggotaTidakDitemukanException($idAnggota);
         }
 
-        // Cari buku melalui KoleksiBuku
-        $bukuDipinjam = $this->koleksiBuku->cariByIsbn($isbn);
+        $bukuDipinjam = $this->repo->cariByIsbn($isbn);
 
         if ($bukuDipinjam === null) {
             throw new BukuTidakDitemukanException($isbn);
@@ -67,63 +64,61 @@ final class LibraryService
             throw new BatasPinjamTerlampauiException($idAnggota, self::BATAS_PINJAM);
         }
 
-        $bukuDipinjam->kurangiStok();
+        $this->repo->kurangiStok($bukuDipinjam);
         $this->pinjaman[$idAnggota]++;
+    }
+
+    public function hitungDenda(int $hariTerlambat): float
+    {
+        return $this->aturanDenda->hitung($hariTerlambat);
+    }
+
+    public function getNamaAturanDenda(): string
+    {
+        return $this->aturanDenda->nama();
     }
 
     public function sisaEksemplar(string $isbn): int
     {
-        $buku = $this->koleksiBuku->cariByIsbn($isbn);
-
-        $sisaEksampelar = 0;
-
-        if ($buku !== null){
-            $sisaEksampelar = $buku->getJumlahEksampelar();
-        }
-
-        return $sisaEksampelar;
+        $buku = $this->repo->cariByIsbn($isbn);
+        return $buku !== null ? $buku->getJumlahEksampelar() : 0;
     }
 
+    /** @return array<string,string> */
     public function getSemuaJudul(): array
     {
         $semuaJudul = [];
-        foreach ($this->koleksiBuku->semua() as $buku) {
+        foreach ($this->repo->cariSemua() as $buku) {
             $semuaJudul[$buku->getNomorInduk()] = $buku->getJudul();
         }
         return $semuaJudul;
-
     }
 
-    /**
-     * 
-     * @return Buku[]
-     */
+    /** @return Buku[] */
     public function getBukuTersedia(): array
     {
-        return $this->koleksiBuku->filter(fn(Buku $b) => $b->tersedia())->semua();
+        return array_values(array_filter(
+            $this->repo->cariSemua(),
+            fn(Buku $b) => $b->tersedia()
+        ));
     }
 
-    /**
-     * 
-     */
     public function getSemuaJudulDigabung(): string
     {
-        // map akan mengubah objek Buku menjadi string (judul saja)
-        $daftarJudul = $this->koleksiBuku->map(fn(Buku $b) => $b->getJudul());
-        return implode(", ", $daftarJudul); // Gabungkan array dengan koma
+        $daftarJudul = array_map(
+            fn(Buku $b) => $b->getJudul(),
+            $this->repo->cariSemua()
+        );
+        return implode(', ', $daftarJudul);
     }
 
-    /**
-     * 
-     * @return array<string,int>
-     */
+    /** @return array<string,int> */
     public function getJumlahBukuPerPenulis(): array
     {
-        $dikelompokkan = $this->koleksiBuku->kelompokkan(fn(Buku $b) => $b->getPenulis());
-        
         $hasil = [];
-        foreach ($dikelompokkan as $penulis => $daftarBuku) {
-            $hasil[$penulis] = count($daftarBuku);
+        foreach ($this->repo->cariSemua() as $buku) {
+            $penulis = $buku->getPenulis();
+            $hasil[$penulis] = ($hasil[$penulis] ?? 0) + 1;
         }
         return $hasil;
     }

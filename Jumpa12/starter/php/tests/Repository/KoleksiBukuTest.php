@@ -3,10 +3,12 @@ declare(strict_types=1);
 
 namespace Perpustakaan\Tests\Repository;
 
+use Perpustakaan\Denda\DendaMahasiswa;
 use Perpustakaan\Exception\AnggotaTidakDitemukanException;
 use Perpustakaan\Exception\BukuTidakDitemukanException;
 use PHPUnit\Framework\TestCase;
 use Perpustakaan\Model\Buku;
+use Perpustakaan\Repository\InMemoryBookRepository;
 use Perpustakaan\Repository\KoleksiBuku as RepositoryKoleksiBuku;
 use Perpustakaan\Service\LibraryService;
 
@@ -118,7 +120,7 @@ final class KoleksiBukuTest extends TestCase
 
     public function testExceptionPinjamBukuTidakAda(): void
     {
-        $service = new LibraryService();
+        $service = new LibraryService(new InMemoryBookRepository(), new DendaMahasiswa());
         $service->daftarkanAnggota('ANG-001');
 
         // Memastikan method membuang BukuTidakDitemukanException
@@ -128,7 +130,7 @@ final class KoleksiBukuTest extends TestCase
 
     public function testExceptionPinjamAnggotaTidakTerdaftar(): void
     {
-        $service = new LibraryService();
+        $service = new LibraryService(new InMemoryBookRepository(), new DendaMahasiswa());
 
         // Memastikan method membuang AnggotaTidakDitemukanException
         $this->expectException(AnggotaTidakDitemukanException::class);

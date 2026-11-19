@@ -1,11 +1,22 @@
-# Catatan tentang kerangka sesi 11
+# Catatan tentang kerangka sesi 12
 
-`Repository.java` dapat dikompilasi sendiri, tetapi `RepositoryTest.java`
-**belum bisa** sampai Anda menambahkan dependensi JUnit 5 ke `pom.xml`
-(lihat `pom-tambahan.xml`) dan meletakkannya di `src/test/java/`.
+Berkas kerangka di folder ini **sengaja tidak dapat dikompilasi sendiri**,
+karena keduanya merujuk pada kelas milik proyek Anda:
 
-Itu memang urutan yang benar: tambahkan dependensi lebih dulu, baru tulis ujinya.
+- `BookRepository.java` dan `InMemoryBookRepository.java` memakai
+  `id.ac.univpancasila.perpustakaan.model.Buku` — kelas dari proyek Maven Anda
+  sendiri, hasil sesi 9.
+- `repository.php` memakai `Perpustakaan\Model\Buku` dari proyek Composer Anda.
 
-Hal yang sama berlaku di sisi PHP: `KoleksiBukuTest.php` membutuhkan PHPUnit
-(`composer require --dev phpunit/phpunit`) dan pemetaan `autoload-dev` pada
-`composer.json` Anda dari sesi 9.
+Cara memakainya:
+
+1. Salin berkas ini ke dalam proyek Anda, pada package/namespace yang sesuai:
+   - `src/main/java/id/ac/univpancasila/perpustakaan/repository/`
+   - `src/main/java/id/ac/univpancasila/perpustakaan/denda/`
+   - `src/Repository/` dan `src/Denda/` untuk versi PHP
+2. Sesuaikan `import` / `use` dengan struktur proyek Anda.
+3. Baru kemudian lengkapi TODO-nya.
+
+Kalau Anda mengompilasi berkas ini di luar proyek dan mendapat pesan
+"cannot find symbol: class Buku", itu bukan kesalahan Anda — memang begitu
+seharusnya. Salin ke proyek Anda lebih dulu.

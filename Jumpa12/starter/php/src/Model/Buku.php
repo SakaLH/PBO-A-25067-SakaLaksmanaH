@@ -71,7 +71,7 @@ final class Buku
 
     /** TODO 4 */
     public function kurangiStok(): void {
-        if ($this->jumlahEksemplar < 0){
+        if ($this->jumlahEksemplar <= 0){
             throw new Error("Gagal mengurangi stok: Stok eksemplar sudah 0.");
         }
 

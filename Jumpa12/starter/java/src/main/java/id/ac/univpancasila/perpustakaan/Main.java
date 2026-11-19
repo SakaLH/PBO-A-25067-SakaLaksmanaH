@@ -5,17 +5,26 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
 import java.util.Scanner;
-import  id.ac.univpancasila.perpustakaan.service.*;
 
+import id.ac.univpancasila.perpustakaan.denda.AturanDenda;
+import id.ac.univpancasila.perpustakaan.denda.AturanDendaFactory;
+import id.ac.univpancasila.perpustakaan.repository.BookRepository;
+import id.ac.univpancasila.perpustakaan.repository.InMemoryBookRepository;
+import id.ac.univpancasila.perpustakaan.service.LibraryService;
+import id.ac.univpancasila.perpustakaan.service.PerpustakaanService;
 
 public class Main {
     public static void main(String[] args) {
-        LibraryService libService = new LibraryService();
+        BookRepository repo = new InMemoryBookRepository();
+        AturanDenda aturanDenda = AturanDendaFactory.untuk("mahasiswa");
+        LibraryService libService = new LibraryService(repo, aturanDenda);
+
         Scanner scanner = new Scanner(System.in);
         boolean berjalan = true;
 
         while (berjalan) {
             System.out.println("\n=== SISTEM PERPUSTAKAAN ===");
+            System.out.println("Aturan denda aktif: " + libService.getNamaAturanDenda());
             System.out.println("1. Tambah Buku");
             System.out.println("2. Tambah Anggota");
             System.out.println("3. Pinjam Buku");
@@ -42,10 +51,10 @@ public class Main {
                     berjalan = false;
                     break;
                 default:
-                    System.out.println("[Peringatan] Pilihan menu tidak valid! Silakan masukkan angka 0 - 3.");
+                    System.out.println("[Peringatan] Pilihan menu tidak valid! Silakan masukkan angka 0 - 4.");
             }
         }
-        
+
         System.out.println("\nMengekspor daftar transaksi ke berkas...");
         eksporLaporan(libService);
 
